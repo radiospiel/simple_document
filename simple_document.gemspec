@@ -5,7 +5,7 @@
 
 Gem::Specification.new do |s|
   s.name = "simple_document"
-  s.version = "0.1.0"
+  s.version = "0.1.1"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["radiospiel"]
@@ -27,10 +27,12 @@ Gem::Specification.new do |s|
     "lib/simple_document.rb",
     "lib/simple_document/file_store.rb",
     "lib/simple_document/ostruct.rb",
+    "simple_document.gemspec",
     "test/file_store_test.rb",
     "test/fixtures/folder/about.de.md",
     "test/fixtures/folder/about.md",
     "test/fixtures/folder/headered.md",
+    "test/name_validation_test.rb",
     "test/test_helper.rb"
   ]
   s.homepage = "http://github.com/radiospiel/simple_document"
