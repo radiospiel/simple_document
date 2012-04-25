@@ -1,13 +1,16 @@
 class SimpleDocument::FileStore
-  include SimpleDocument::Store
-
-  class Document < SimpleDocument::OpenStructDocument
+  class Document < SimpleDocument::Ostruct
     def mtime
-      @open_struct.mtime ? Time.parse(@open_struct.mtime.to_s) : File.mtime(self.uri)
+      @ostruct.mtime ? Time.parse(@ostruct.mtime.to_s) : File.mtime(self.uri)
     end
   end
 
+  attr :url
   alias :root :url
+
+  def initialize(url)
+    @url = url
+  end
 
   # Fetches a document by name from a specific subset with a given
   # locale (or no locale, if the locale parameter is set to nil.)

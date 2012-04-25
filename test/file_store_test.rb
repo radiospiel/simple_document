@@ -67,12 +67,19 @@ class SimpleDocument::FileStoreTest < Test::Unit::TestCase
   end
 
   # load missing document
-  def test_load_missing
-    doc = SimpleDocument.fetch "missing-folder", "about"
-    assert_nil(doc)
+  def test_load_missing!
+    assert_raise(Errno::ENOENT) {  
+      SimpleDocument.fetch! "missing-folder", "about"
+    }
 
-    doc = SimpleDocument.fetch "folder", "missing-about"
-    assert_nil(doc)
+    assert_raise(Errno::ENOENT) {  
+      SimpleDocument.fetch! "folder", "missing-about"
+    }
+  end
+
+  def test_load_missing
+    assert_nil SimpleDocument.fetch("missing-folder", "about")
+    assert_nil SimpleDocument.fetch("folder", "missing-about")
   end
 
   # -- fetch collections ------------------------------------------------
