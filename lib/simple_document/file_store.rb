@@ -43,7 +43,9 @@ class SimpleDocument::FileStore
   public
   
   def store(subset, name, locale, data)
-    format, body = data.values_at "format", "body"
+    format = data.delete "format"
+    body = data.delete "body"
+    
     ext = FORMAT_BY_EXTENSION.key(format.to_sym) || raise(ArgumentError, "Unsupported format #{format.inspect}")
     locale_ext = ".#{locale}" if locale
     

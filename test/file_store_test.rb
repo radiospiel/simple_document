@@ -125,6 +125,8 @@ class SimpleDocument::FileStoreTest < Test::Unit::TestCase
     assert_equal("The body", doc.body)
     assert_equal(true, doc.active?)
 
+    assert_equal "---\nThe body", File.read(doc.uri)
+    
     doc = SimpleDocument.read! "writing/foo", :locale => "de"
     assert_equal("foo", doc.name)
     assert_equal("The body", doc.body)
