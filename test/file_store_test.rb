@@ -8,6 +8,9 @@ class SimpleDocument::FileStoreTest < Test::Unit::TestCase
   def setup
     SimpleDocument.store_url = "#{DIR}/fixtures"
 
+    # Clean writing directory
+    FileUtils.rm_rf("#{DIR}/fixtures/writing")
+
     #raise SimpleDocument.document_store.inspect
     # @store ||= SimpleDocument.new("simple_document_test")
   end
@@ -101,4 +104,50 @@ class SimpleDocument::FileStoreTest < Test::Unit::TestCase
     assert_equal(2, docs.count)
     assert_equal([], docs["missing"])
   end
+
+  # -- writing ------------------------------------------------
+  
+  def test_write_fails
+    # Make sure we are blank.
+    assert_raise(Errno::ENOENT) { SimpleDocument.fetch! "writing", "foo" }
+    
+    # Missing format
+    assert_raise(ArgumentError) { SimpleDocument.store "writing", "foo", nil, :body => "The body" }
+
+    # Invalid format
+    assert_raise(ArgumentError) { SimpleDocument.store "writing", "foo", nil, :body => "The body", :format => "yahoo!" }
+
+    # Invalid names
+    assert_raise(ArgumentError) { SimpleDocument.store "wba/../dd", "12.kjsh", nil, :body => "The body", :format => "markdown" }
+  end
+
+  def test_write
+    # Make sure we are blank.
+    assert_raise(Errno::ENOENT) { SimpleDocument.fetch! "writing", "foo" }
+
+    doc = SimpleDocument.store "writing", "foo", nil, :body => "The body", :format => "markdown"
+    assert_equal("foo", doc.name)
+    assert_equal("The body", doc.body)
+    assert_equal(true, doc.active?)
+
+    doc = SimpleDocument.fetch! "writing", "foo", "de"
+    assert_equal("foo", doc.name)
+    assert_equal("The body", doc.body)
+    assert_equal(true, doc.active?)
+  end
+
+  # -- uncache ------------------------------------------------
+  
+  def test_uncache
+    store_1 = SimpleDocument.document_store
+    store_2 = SimpleDocument.document_store
+    SimpleDocument.uncache
+    store_3 = SimpleDocument.document_store
+    
+    assert_equal(store_1.object_id, store_2.object_id)
+    assert_not_equal(store_1.object_id, store_3.object_id)
+
+    assert_equal(store_1.url, store_3.url)
+  end
+
 end

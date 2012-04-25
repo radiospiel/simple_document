@@ -32,19 +32,23 @@ class SimpleDocument::FileStore
       tap { |hash| hash.default = [] }
   end
   
+  private
+  
+  def dir(subset) 
+    dir = "#{root}/#{subset}"
+    FileUtils.mkdir_p(dir) unless File.directory?(dir)
+    dir
+  end
+  
+  public
+  
   def store(subset, name, locale, data)
-    raise ArgumentError, "Invalid subset #{subset.inspect}" if subset =~ /\./
-    raise ArgumentError, "Invalid name #{name.inspect}" if name =~ /\./
-
-    data = data.stringify_keys
-
-    format = data.delete "format"
-    body = data.delete "body"
-
+    format, body = data.values_at "format", "body"
     ext = FORMAT_BY_EXTENSION.key(format.to_sym) || raise(ArgumentError, "Unsupported format #{format.inspect}")
     locale_ext = ".#{locale}" if locale
     
-    path = "#{root}/#{subset}/#{name}#{locale_ext}.#{ext}"
+    path = "#{dir(subset)}/#{name}#{locale_ext}.#{ext}"
+    
     File.open(path, "w") do |file|
       file.write data.to_yaml unless data.empty?
       file.write "---\n"

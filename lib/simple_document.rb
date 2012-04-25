@@ -35,6 +35,14 @@ class SimpleDocument
 
     # Stores a single document in a specific subset in this store.
     def store(subset, name, locale, data)
+      raise ArgumentError, "Invalid subset #{subset.inspect}" if subset =~ /\./
+      raise ArgumentError, "Invalid name #{name.inspect}" if name =~ /\./
+
+      # stringify keys
+      data = data.inject({}) { |hash, (k,v)| hash.update(k.to_s => v) }
+
+      raise(ArgumentError, "Missing format entry") unless data.key?("format")
+      
       document_store.store(subset, name, locale, data)
     end
 
