@@ -1,4 +1,3 @@
-require 'forwardable'
 require_relative "abstract_method"
 
 class SimpleDocument
@@ -10,40 +9,41 @@ class SimpleDocument
   abstract_method :mtime
 
   singleton_class.class_eval do
-    extend Forwardable
-    
-    def store_url=(url)
-      @document_store = FileStore.new(url)
+    def url
+      @store.url if @store
     end
     
-    def document_store
-      @document_store || raise("Missing SimpleDocument.store_url setting")
+    def url=(url)
+      @store = FileStore.new(url)
+    end
+    
+    def store
+      @store || raise("Missing SimpleDocument.url setting")
     end
 
     def uncache
-      self.store_url = document_store.url if document_store
+      self.url = store.url if store
     end
-    
-    delegate :url => :document_store
     
     # Return a Hash of all documents in a specific subset in this store. 
     # The Hash keys are the document names, the hash values are an Array
     # of documents for this name, with potentially different locales.
     def all(subset)
-      document_store.all(subset)
+      store.all(subset)
     end
 
     # Stores a single document in a specific subset in this store.
-    def store(subset, name, locale, data)
+    def write(subset, name, data)
       raise ArgumentError, "Invalid subset #{subset.inspect}" if subset =~ /\./
       raise ArgumentError, "Invalid name #{name.inspect}" if name =~ /\./
 
       # stringify keys
       data = data.inject({}) { |hash, (k,v)| hash.update(k.to_s => v) }
+      locale = data.delete "locale"
 
       raise(ArgumentError, "Missing format entry") unless data.key?("format")
       
-      document_store.store(subset, name, locale, data)
+      store.store(subset, name, locale, data)
     end
 
     # Fetches a document by name from a specific subset. If a localize 
@@ -52,24 +52,20 @@ class SimpleDocument
     # variant of the document.
     # 
     # The method returns nil if there is no such document.
-    def fetch(subset, name, locale=nil)
-      (locale && fetch_with_locale(subset, name, locale)) ||
-      fetch_with_locale(subset, name, nil)
+    def read(subset, name, options = {})
+      # stringify keys
+      options = options.inject({}) { |hash, (k,v)| hash.update(k.to_s => v) }
+      locale = options.delete "locale"
+      
+      (locale && store.fetch_with_locale(subset, name, locale)) ||
+      store.fetch_with_locale(subset, name, nil)
     end
 
     # Fetches a document by name from a specific subset, using #fetch.
     # In opposite to #fetch this method raises an Errno::ENOENT 
     # exception if there is no such document.
-    def fetch!(subset, name, locale=nil)
-      fetch(subset, name, locale) || raise(Errno::ENOENT, "SimpleDocument[#{url}]/#{subset}/#{name}")
-    end
-
-    private
-
-    # Fetches a document by name from a specific subset with a given
-    # locale (or no locale, if the locale parameter is set to nil.)
-    def fetch_with_locale(subset, name, locale); 
-      document_store.fetch_with_locale(subset, name, locale)
+    def read!(subset, name, options = {})
+      read(subset, name, options) || raise(Errno::ENOENT, "SimpleDocument[#{url}]/#{subset}/#{name}")
     end
   end 
 end

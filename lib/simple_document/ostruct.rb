@@ -1,4 +1,5 @@
 require 'ostruct'
+require 'forwardable'
 
 class SimpleDocument::Ostruct < SimpleDocument
   extend Forwardable

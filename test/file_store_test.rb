@@ -3,16 +3,11 @@ require_relative 'test_helper'
 DIR = File.expand_path File.dirname(__FILE__)
 
 class SimpleDocument::FileStoreTest < Test::Unit::TestCase
-  # include SimpleDocument::TestCase
-
   def setup
-    SimpleDocument.store_url = "#{DIR}/fixtures"
+    SimpleDocument.url = "#{DIR}/fixtures"
 
     # Clean writing directory
     FileUtils.rm_rf("#{DIR}/fixtures/writing")
-
-    #raise SimpleDocument.document_store.inspect
-    # @store ||= SimpleDocument.new("simple_document_test")
   end
   
   def teardown
@@ -22,7 +17,7 @@ class SimpleDocument::FileStoreTest < Test::Unit::TestCase
   # -- load single documents ------------------------------------------------
   
   def test_load_about
-    doc = SimpleDocument.fetch "folder", "about"
+    doc = SimpleDocument.read "folder", "about"
     
     assert_equal "#{DIR}/fixtures/folder/about.md", doc.uri
     assert_equal :markdown, doc.format
@@ -36,7 +31,7 @@ class SimpleDocument::FileStoreTest < Test::Unit::TestCase
 
   # load document in a specific locale
   def test_load_about_de
-    doc = SimpleDocument.fetch "folder", "about", "de"
+    doc = SimpleDocument.read "folder", "about", :locale => "de"
     
     assert_equal "#{DIR}/fixtures/folder/about.de.md", doc.uri
     assert_equal :markdown, doc.format
@@ -50,14 +45,14 @@ class SimpleDocument::FileStoreTest < Test::Unit::TestCase
 
   # fallback to base document in a specific, but missing locale
   def test_load_about_missing_locale
-    doc = SimpleDocument.fetch "folder", "about", "fr"
+    doc = SimpleDocument.read "folder", "about", :locale => "fr"
     
     assert_equal "#{DIR}/fixtures/folder/about.md", doc.uri
   end
 
   # load document with headers
   def test_load_headered
-    doc = SimpleDocument.fetch "folder", "headered"
+    doc = SimpleDocument.read "folder", "headered"
     
     assert_equal "#{DIR}/fixtures/folder/headered.md", doc.uri
     assert_equal :markdown, doc.format
@@ -72,17 +67,17 @@ class SimpleDocument::FileStoreTest < Test::Unit::TestCase
   # load missing document
   def test_load_missing!
     assert_raise(Errno::ENOENT) {  
-      SimpleDocument.fetch! "missing-folder", "about"
+      SimpleDocument.read! "missing-folder", "about"
     }
 
     assert_raise(Errno::ENOENT) {  
-      SimpleDocument.fetch! "folder", "missing-about"
+      SimpleDocument.read! "folder", "missing-about"
     }
   end
 
   def test_load_missing
-    assert_nil SimpleDocument.fetch("missing-folder", "about")
-    assert_nil SimpleDocument.fetch("folder", "missing-about")
+    assert_nil SimpleDocument.read("missing-folder", "about")
+    assert_nil SimpleDocument.read("folder", "missing-about")
   end
 
   # -- fetch collections ------------------------------------------------
@@ -109,28 +104,28 @@ class SimpleDocument::FileStoreTest < Test::Unit::TestCase
   
   def test_write_fails
     # Make sure we are blank.
-    assert_raise(Errno::ENOENT) { SimpleDocument.fetch! "writing", "foo" }
+    assert_raise(Errno::ENOENT) { SimpleDocument.read! "writing", "foo" }
     
     # Missing format
-    assert_raise(ArgumentError) { SimpleDocument.store "writing", "foo", nil, :body => "The body" }
+    assert_raise(ArgumentError) { SimpleDocument.write "writing", "foo", :body => "The body" }
 
     # Invalid format
-    assert_raise(ArgumentError) { SimpleDocument.store "writing", "foo", nil, :body => "The body", :format => "yahoo!" }
+    assert_raise(ArgumentError) { SimpleDocument.write "writing", "foo", :body => "The body", :format => "yahoo!" }
 
     # Invalid names
-    assert_raise(ArgumentError) { SimpleDocument.store "wba/../dd", "12.kjsh", nil, :body => "The body", :format => "markdown" }
+    assert_raise(ArgumentError) { SimpleDocument.write "wba/../dd", "12.kjsh", :body => "The body", :format => "markdown" }
   end
 
   def test_write
     # Make sure we are blank.
-    assert_raise(Errno::ENOENT) { SimpleDocument.fetch! "writing", "foo" }
+    assert_raise(Errno::ENOENT) { SimpleDocument.read! "writing", "foo" }
 
-    doc = SimpleDocument.store "writing", "foo", nil, :body => "The body", :format => "markdown"
+    doc = SimpleDocument.write "writing", "foo", :body => "The body", :format => "markdown"
     assert_equal("foo", doc.name)
     assert_equal("The body", doc.body)
     assert_equal(true, doc.active?)
 
-    doc = SimpleDocument.fetch! "writing", "foo", "de"
+    doc = SimpleDocument.read! "writing", "foo", :locale => "de"
     assert_equal("foo", doc.name)
     assert_equal("The body", doc.body)
     assert_equal(true, doc.active?)
@@ -139,15 +134,14 @@ class SimpleDocument::FileStoreTest < Test::Unit::TestCase
   # -- uncache ------------------------------------------------
   
   def test_uncache
-    store_1 = SimpleDocument.document_store
-    store_2 = SimpleDocument.document_store
+    store_1 = SimpleDocument.store
+    store_2 = SimpleDocument.store
     SimpleDocument.uncache
-    store_3 = SimpleDocument.document_store
+    store_3 = SimpleDocument.store
     
     assert_equal(store_1.object_id, store_2.object_id)
     assert_not_equal(store_1.object_id, store_3.object_id)
 
     assert_equal(store_1.url, store_3.url)
   end
-
 end
