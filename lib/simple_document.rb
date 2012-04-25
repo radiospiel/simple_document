@@ -72,7 +72,7 @@ class SimpleDocument
     private
     
     def parse_name(name)
-      if name =~ /^([-a-zA-Z0-9]+)\/([-a-zA-Z0-9]+)$/
+      if name =~ /^([A-Za-z][-a-zA-Z0-9_]*)\/([A-Za-z][-a-zA-Z0-9_]*)$/
         return [$1, $2]
       end
       
