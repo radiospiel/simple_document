@@ -33,9 +33,8 @@ class SimpleDocument
     end
 
     # Stores a single document in a specific subset in this store.
-    def write(subset, name, data)
-      raise ArgumentError, "Invalid subset #{subset.inspect}" if subset =~ /\./
-      raise ArgumentError, "Invalid name #{name.inspect}" if name =~ /\./
+    def write(name, data)
+      subset, name = parse_name(name)
 
       # stringify keys
       data = data.inject({}) { |hash, (k,v)| hash.update(k.to_s => v) }
@@ -52,7 +51,9 @@ class SimpleDocument
     # variant of the document.
     # 
     # The method returns nil if there is no such document.
-    def read(subset, name, options = {})
+    def read(name, options = {})
+      subset, name = parse_name(name)
+      
       # stringify keys
       options = options.inject({}) { |hash, (k,v)| hash.update(k.to_s => v) }
       locale = options.delete "locale"
@@ -64,10 +65,20 @@ class SimpleDocument
     # Fetches a document by name from a specific subset, using #fetch.
     # In opposite to #fetch this method raises an Errno::ENOENT 
     # exception if there is no such document.
-    def read!(subset, name, options = {})
-      read(subset, name, options) || raise(Errno::ENOENT, "SimpleDocument[#{url}]/#{subset}/#{name}")
+    def read!(name, options = {})
+      read(name, options) || raise(Errno::ENOENT, "SimpleDocument[#{url}]/#{name}")
     end
-  end 
+    
+    private
+    
+    def parse_name(name)
+      if name =~ /^([-a-zA-Z0-9]+)\/([-a-zA-Z0-9]+)$/
+        return [$1, $2]
+      end
+      
+      raise ArgumentError, "Invalid name #{name.inspect}"
+    end
+  end
 end
 
 require_relative "simple_document/ostruct"

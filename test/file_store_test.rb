@@ -17,7 +17,7 @@ class SimpleDocument::FileStoreTest < Test::Unit::TestCase
   # -- load single documents ------------------------------------------------
   
   def test_load_about
-    doc = SimpleDocument.read "folder", "about"
+    doc = SimpleDocument.read "folder/about"
     
     assert_equal "#{DIR}/fixtures/folder/about.md", doc.uri
     assert_equal :markdown, doc.format
@@ -31,7 +31,7 @@ class SimpleDocument::FileStoreTest < Test::Unit::TestCase
 
   # load document in a specific locale
   def test_load_about_de
-    doc = SimpleDocument.read "folder", "about", :locale => "de"
+    doc = SimpleDocument.read "folder/about", :locale => "de"
     
     assert_equal "#{DIR}/fixtures/folder/about.de.md", doc.uri
     assert_equal :markdown, doc.format
@@ -45,14 +45,14 @@ class SimpleDocument::FileStoreTest < Test::Unit::TestCase
 
   # fallback to base document in a specific, but missing locale
   def test_load_about_missing_locale
-    doc = SimpleDocument.read "folder", "about", :locale => "fr"
+    doc = SimpleDocument.read "folder/about", :locale => "fr"
     
     assert_equal "#{DIR}/fixtures/folder/about.md", doc.uri
   end
 
   # load document with headers
   def test_load_headered
-    doc = SimpleDocument.read "folder", "headered"
+    doc = SimpleDocument.read "folder/headered"
     
     assert_equal "#{DIR}/fixtures/folder/headered.md", doc.uri
     assert_equal :markdown, doc.format
@@ -67,17 +67,17 @@ class SimpleDocument::FileStoreTest < Test::Unit::TestCase
   # load missing document
   def test_load_missing!
     assert_raise(Errno::ENOENT) {  
-      SimpleDocument.read! "missing-folder", "about"
+      SimpleDocument.read! "missing-folder/about"
     }
 
     assert_raise(Errno::ENOENT) {  
-      SimpleDocument.read! "folder", "missing-about"
+      SimpleDocument.read! "folder/missing-about"
     }
   end
 
   def test_load_missing
-    assert_nil SimpleDocument.read("missing-folder", "about")
-    assert_nil SimpleDocument.read("folder", "missing-about")
+    assert_nil SimpleDocument.read("missing-folder/about")
+    assert_nil SimpleDocument.read("folder/missing-about")
   end
 
   # -- fetch collections ------------------------------------------------
@@ -104,13 +104,13 @@ class SimpleDocument::FileStoreTest < Test::Unit::TestCase
   
   def test_write_fails
     # Make sure we are blank.
-    assert_raise(Errno::ENOENT) { SimpleDocument.read! "writing", "foo" }
+    assert_raise(Errno::ENOENT) { SimpleDocument.read! "writing/foo" }
     
     # Missing format
-    assert_raise(ArgumentError) { SimpleDocument.write "writing", "foo", :body => "The body" }
+    assert_raise(ArgumentError) { SimpleDocument.write "writing/foo", :body => "The body" }
 
     # Invalid format
-    assert_raise(ArgumentError) { SimpleDocument.write "writing", "foo", :body => "The body", :format => "yahoo!" }
+    assert_raise(ArgumentError) { SimpleDocument.write "writing/foo", :body => "The body", :format => "yahoo!" }
 
     # Invalid names
     assert_raise(ArgumentError) { SimpleDocument.write "wba/../dd", "12.kjsh", :body => "The body", :format => "markdown" }
@@ -118,14 +118,14 @@ class SimpleDocument::FileStoreTest < Test::Unit::TestCase
 
   def test_write
     # Make sure we are blank.
-    assert_raise(Errno::ENOENT) { SimpleDocument.read! "writing", "foo" }
+    assert_raise(Errno::ENOENT) { SimpleDocument.read! "writing/foo" }
 
-    doc = SimpleDocument.write "writing", "foo", :body => "The body", :format => "markdown"
+    doc = SimpleDocument.write "writing/foo", :body => "The body", :format => "markdown"
     assert_equal("foo", doc.name)
     assert_equal("The body", doc.body)
     assert_equal(true, doc.active?)
 
-    doc = SimpleDocument.read! "writing", "foo", :locale => "de"
+    doc = SimpleDocument.read! "writing/foo", :locale => "de"
     assert_equal("foo", doc.name)
     assert_equal("The body", doc.body)
     assert_equal(true, doc.active?)
